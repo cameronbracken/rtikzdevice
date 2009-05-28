@@ -24,7 +24,13 @@ typedef struct{
 	Rboolean firstClip;
 	int oldFillColor;
 	int oldDrawColor;
+	int oldLineWidth;
 	int oldLineType;
+	unsigned int oldFillAlpha;
+	unsigned int oldDrawAlpha;
+	R_GE_linejoin oldLineJoin;
+	R_GE_lineend oldLineEnd;
+	int oldLineMitre;
 	pGEcontext plotParams;
 } tikzDevDesc;
 
@@ -75,17 +81,18 @@ static void TikZ_Polygon( int n, double *x, double *y,
 		pGEcontext plotParams, pDevDesc deviceInfo );
 		
 /*Internal style definition routines*/
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-	pDevDesc deviceInfo);
-static void SetColor(int color, Rboolean def, pDevDesc deviceInfo);
-static void SetFill(int color, Rboolean def, pDevDesc deviceInfo);
-static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo);
-static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo);
-static void SetDashPattern(int lty, FILE *outputFile);
-static void SetLineWeight(int lwd, FILE *outputFile);
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo);
-static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo);
-static void SetMitreLimit(double lmitre, FILE *outputFile);
+static void SetAllStyles(const pGEcontext plotParams, tikzDevDesc *tikzInfo);
+static void SetStylesIfChanged(const pGEcontext plotParams, tikzDevDesc *tikzInfo);
+static void SetFillColor(int color, tikzDevDesc *tikzInfo);
+static void SetDrawColor(int color, tikzDevDesc *tikzInfo);
+static void SetFillAlpha(int color,tikzDevDesc *tikzInfo);
+static void SetDrawAlpha(int color, tikzDevDesc *tikzInfo);
+static void SetLineStyle(int lineType, int lineWidth, tikzDevDesc *tikzInfo);
+static void SetLineWidth(int lineWidth, tikzDevDesc *tikzInfo);
+static void SetDashPattern(int lineType, tikzDevDesc *tikzInfo);
+static void SetLineJoin(R_GE_linejoin lineJoin, double lineMitre, tikzDevDesc *tikzInfo);
+static void SetMitreLimit(double lineMitre, tikzDevDesc *tikzInfo);
+static void SetLineEnd(R_GE_linejoin lineEnd, tikzDevDesc *tikzInfo);
 static void TeXText(const char *str,  tikzDevDesc *tikzInfo);
 
 

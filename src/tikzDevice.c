@@ -174,6 +174,12 @@ static Rboolean TikZ_Setup(
 	tikzInfo->oldFillColor = 0;
 	tikzInfo->oldDrawColor = 0;
 	tikzInfo->oldLineType = 0;
+	tikzInfo->oldLineWidth = 0;
+	tikzInfo->oldFillAlpha = 0;
+	tikzInfo->oldDrawAlpha = 0;
+	tikzInfo->oldLineMitre = 0;
+	tikzInfo->oldLineJoin = 1;
+	tikzInfo->oldLineEnd = 1;
 	tikzInfo->plotParams = plotParams;
 
 	/* Incorporate tikzInfo into deviceInfo. */
@@ -285,7 +291,7 @@ static Rboolean TikZ_Setup(
 
 	/* 
 	* Apparently these are supposed to center text strings over the points at
-    * which they are plottet. TikZ does this automagically.
+    * which they are plotted. TikZ does this automagically.
 	*/
 	deviceInfo->xCharOffset = 0;	
 	deviceInfo->yCharOffset = 0;	
@@ -446,9 +452,7 @@ static void TikZ_NewPage( const pGEcontext plotParams, pDevDesc deviceInfo ){
 			"\\draw[color=white,opacity=0] (0,0) rectangle (%6.2f,%6.2f);\n",
 			deviceInfo->right,deviceInfo->top);
 				
-		/*Define default colors*/
-		SetColor(plotParams->col, TRUE, deviceInfo);
-		SetFill(plotParams->fill, TRUE, deviceInfo);
+		SetStylesIfChanged(tikzInfo->plotParams, tikzInfo);
 		
 	}
 
@@ -476,7 +480,9 @@ static void TikZ_Clip( double x0, double x1,
 			x0,y0,x1,y1);
 			
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, tikzInfo->plotParams, deviceInfo);
+	//SetStylesIfChanged(tikzInfo->plotParams, tikzInfo);
+	fprintf(tikzInfo->outputFile, "\\tikzset{every path/.style={a,b,c,d,e,f,g,h,f}}\n");
+	SetAllStyles(tikzInfo->plotParams, tikzInfo);
 }
 
 static void TikZ_Size( double *left, double *right,
@@ -570,13 +576,10 @@ static void TikZ_Line( double x1, double y1,
 			x1,y1,x2,y2);
 
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+	SetStylesIfChanged( plotParams, tikzInfo);
 
 	/* Start drawing a line, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\draw[");
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+	fprintf( tikzInfo->outputFile,"\n\\path[");
 
 	/* More options would go here such as line thickness, style, color etc. */
 	
@@ -599,18 +602,15 @@ static void TikZ_Circle( double x, double y, double r,
 			x,y,r);
 
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+	SetStylesIfChanged( plotParams, tikzInfo);
 
 	/* Start drawing, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\draw[");
+	fprintf( tikzInfo->outputFile,"\n\\path[");
 
 	/* 
 	 * More options would go here such as line thickness, style, line 
 	 * and fill color etc. 
 	*/ 
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
 
 	
 	/* End options, print coordinates. */
@@ -631,13 +631,10 @@ static void TikZ_Rectangle( double x0, double y0,
 			x0,y0,x1,y1);
 
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+	SetStylesIfChanged( plotParams, tikzInfo);
 
 	/* Start drawing, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\draw[");
-
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
+	fprintf( tikzInfo->outputFile,"\n\\path[");
 
 	/* 
 	 * More options would go here such as line thickness, style, line 
@@ -662,14 +659,13 @@ static void TikZ_Polyline( int n, double *x, double *y,
 			"\n%% Starting Polyline");
 
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+	SetStylesIfChanged( plotParams, tikzInfo);
 
 	/* Start drawing, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\draw[");
+	fprintf( tikzInfo->outputFile,"\n\\path[");
 
 	/* More options would go here such as line thickness, style and color */
 	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -707,18 +703,15 @@ static void TikZ_Polygon( int n, double *x, double *y,
 			"\n%% Starting Polygon");
 			
 	/*Define the colors for fill and border*/
-	StyleDef(TRUE, plotParams, deviceInfo);
+	SetStylesIfChanged( plotParams, tikzInfo);
 	
 	/* Start drawing, open an options bracket. */
-	fprintf( tikzInfo->outputFile,"\n\\draw[");
+	fprintf( tikzInfo->outputFile,"\n\\path[");
 	
 	/* 
 	 * More options would go here such as line thickness, style, line 
 	 * and fill color etc. 
 	*/
-	
-	/*Define the draw styles*/
-	StyleDef(FALSE, plotParams, deviceInfo);
 
 	/* End options, print first set of coordinates. */
 	fprintf( tikzInfo->outputFile, "] (%6.2f,%6.2f) --\n",
@@ -749,8 +742,32 @@ static void TikZ_Polygon( int n, double *x, double *y,
  * SetLineStyle and CheckAndSetAlpha are only run if the style is being used 
  * because there are no color definitions outside of the draw command. 
 */
-static void StyleDef(Rboolean defineColor, const pGEcontext plotParams, 
-						pDevDesc deviceInfo){
+static void SetAllStyles(const pGEcontext plotParams, tikzDevDesc *tikzInfo){
+	
+	/* a - SetFillColor
+	 * b - SetDrawColor
+	 * c - SetFillAlpha
+	 * d - SetDrawAlpha
+	 * e - SetLineWidth
+	 * f - SetDashPattern
+	 * g - SetLineJoin
+	 * h - SetMiterLimit
+	 * i - SetLineEnd
+	*/
+
+	SetFillColor(plotParams->fill, tikzInfo);
+	SetDrawColor(plotParams->col, tikzInfo);
+	SetFillAlpha(plotParams->fill, tikzInfo);
+	SetDrawAlpha(plotParams->col, tikzInfo);
+	SetLineWidth(plotParams->lwd, tikzInfo);
+	SetDashPattern(plotParams->lty, tikzInfo);
+	SetLineJoin(plotParams->ljoin, plotParams->lmitre, tikzInfo);
+	SetMitreLimit(plotParams->lmitre, tikzInfo);
+	SetLineEnd(plotParams->lend, tikzInfo);
+	
+}
+
+static void SetStylesIfChanged(const pGEcontext plotParams, tikzDevDesc *tikzInfo){
 	
 	/*From devPS.c, PS_Circle()*/
 	int code;
@@ -765,82 +782,123 @@ static void StyleDef(Rboolean defineColor, const pGEcontext plotParams,
 	if (code) {
 		if(code & 1) {
 			/* Define outline draw color*/
-			SetColor(plotParams->col, defineColor, deviceInfo);
-			if(defineColor == FALSE){
-				SetLineStyle(plotParams->lty, plotParams->lwd, deviceInfo);
-				SetLineEnd(plotParams->lend, deviceInfo);
-				SetLineJoin(plotParams->ljoin, plotParams->lmitre, deviceInfo);
+			if(plotParams->col != tikzInfo->oldDrawColor){
+				tikzInfo->oldDrawColor = plotParams->col;
+				SetDrawColor(plotParams->col, tikzInfo);
 			}
+			if ( plotParams->lwd != tikzInfo->oldLineWidth ){
+				tikzInfo->oldLineWidth = plotParams->lwd;
+				SetLineWidth(plotParams->lwd, tikzInfo);
+			}
+			if ( plotParams->lty && plotParams->lwd)
+				if ( plotParams->lty != 1 && plotParams->lty != 0)
+					if ( plotParams->lty != tikzInfo->oldLineType ){
+						tikzInfo->oldLineType = plotParams->lty;
+						SetDashPattern(plotParams->lty, tikzInfo);
+					}
+			if( plotParams->lend != tikzInfo->oldLineEnd ){
+				tikzInfo->oldLineEnd = plotParams->lend;
+				SetLineEnd(plotParams->lend, tikzInfo);
+			}
+			if ( plotParams->ljoin != tikzInfo->oldLineJoin ){
+				tikzInfo->oldLineJoin = plotParams->ljoin;
+				SetLineJoin(plotParams->ljoin, plotParams->lmitre, tikzInfo);
+			}
+			if ( plotParams->lmitre != 10)
+				if(plotParams->lmitre != tikzInfo->oldLineMitre){
+					tikzInfo->oldLineMitre = plotParams->lmitre;
+					SetMitreLimit(plotParams->lmitre, tikzInfo);
+				}
 		}
 		if(code & 2){
 			/* Define fill color*/
-			SetFill(plotParams->fill, defineColor, deviceInfo);
+			if(plotParams->fill != tikzInfo->oldFillColor){
+				tikzInfo->oldFillColor = plotParams->fill;
+				SetFillColor(plotParams->fill, tikzInfo);
+			}
 		}
 	}
 	/*Set Alpha*/
-	if(defineColor == FALSE){
-		/*Set Fill opacity Alpha*/
-		SetAlpha(plotParams->fill, TRUE, deviceInfo);
-		/*Set Draw opacity Alpha*/
-		SetAlpha(plotParams->col, FALSE, deviceInfo);
+
+	/*Set Fill opacity*/
+	if(R_ALPHA(plotParams->fill) != tikzInfo->oldFillAlpha){
+		tikzInfo->oldFillAlpha = R_ALPHA(plotParams->fill);
+		SetFillAlpha(plotParams->fill, tikzInfo);
+	}
+	
+	/*Set Draw opacity*/
+	if(R_ALPHA(plotParams->col) != tikzInfo->oldDrawAlpha){
+		tikzInfo->oldDrawAlpha = R_ALPHA(plotParams->col);
+		SetDrawAlpha(plotParams->col, tikzInfo);
 	}
 	
 }
 
-static void SetFill(int color, Rboolean def, pDevDesc deviceInfo){
+static void SetFillColor(int color, tikzDevDesc *tikzInfo){
 	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	fprintf(tikzInfo->outputFile,
+			"\n\\definecolor[named]{FillColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+			R_RED(color)/255.0,
+			R_GREEN(color)/255.0,
+			R_BLUE(color)/255.0);
+	fprintf(tikzInfo->outputFile, 
+			"\\tikzset{a/.style={fill=FillColor}}\n");
 	
-	if(def == TRUE){
-		if(color != tikzInfo->oldFillColor){
-			tikzInfo->oldFillColor = color;
-			fprintf(tikzInfo->outputFile,
-					"\n\\definecolor[named]{fillColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-					R_RED(color)/255.0,
-					R_GREEN(color)/255.0,
-					R_BLUE(color)/255.0);
-		}
-	}else{
-		fprintf( tikzInfo->outputFile, "fill=fillColor,");
+}
+
+
+static void SetDrawColor(int color, tikzDevDesc *tikzInfo){
+
+	fprintf(tikzInfo->outputFile,
+			"\n\\definecolor[named]{DrawColor}{rgb}{%4.2f,%4.2f,%4.2f}\n",
+			R_RED(color)/255.0,
+			R_GREEN(color)/255.0,
+			R_BLUE(color)/255.0);
+	fprintf(tikzInfo->outputFile, 
+			"\\tikzset{b/.style={draw=DrawColor}}\n");
+	
+}
+
+
+static void SetFillAlpha(int color, tikzDevDesc *tikzInfo){
+	
+	unsigned int alpha = R_ALPHA(color);
+	
+	/*draw opacity and fill opacity separately here*/
+	if(!R_OPAQUE(color)){
+		fprintf(tikzInfo->outputFile,
+			"\\tikzset{c/.style={fill opacity=%4.2f}}\n",
+			alpha/255.0);
 	}
 	
 }
 
 
-static void SetColor(int color, Rboolean def, pDevDesc deviceInfo){
+static void SetDrawAlpha(int color, tikzDevDesc *tikzInfo){
 	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	unsigned int alpha = R_ALPHA(color);
 	
-	if(def == TRUE){
-		if(color != tikzInfo->oldDrawColor){
-			tikzInfo->oldDrawColor = color;
-			fprintf(tikzInfo->outputFile,
-					"\n\\definecolor[named]{drawColor}{rgb}{%4.2f,%4.2f,%4.2f}",
-					R_RED(color)/255.0,
-					R_GREEN(color)/255.0,
-					R_BLUE(color)/255.0);
-		}
-	}else{
-		fprintf( tikzInfo->outputFile, "color=drawColor,");
+	/*draw opacity and fill opacity separately here*/
+	if(!R_OPAQUE(color)){
+		fprintf(tikzInfo->outputFile,
+			"\\tikzset{d/.style={draw opacity=%4.2f}}\n",
+			alpha/255.0);
 	}
+	
 }
 
-static void SetLineStyle(int lty, int lwd, pDevDesc deviceInfo){
+
+static void SetLineWidth(int lineWidth, tikzDevDesc *tikzInfo){
 	
-    /* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
+	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
+	fprintf(tikzInfo->outputFile,
+		"\\tikzset{e/.style={line width=%4.1fpt}}\n",0.4*lineWidth);
 		
-	SetLineWeight(lwd, tikzInfo->outputFile);
-	
-    if (lty && lwd) {
-	
-		SetDashPattern(lty, tikzInfo->outputFile);
-    }
 }
 
-static void SetDashPattern(int lty, FILE *outputFile){
+
+static void SetDashPattern(int lineType, tikzDevDesc *tikzInfo){
+	
 	char dashlist[8];
 	int i, nlty;
 	
@@ -864,95 +922,75 @@ static void SetDashPattern(int lty, FILE *outputFile){
 	*/
 	
 	/*Retrieve the line type pattern*/
-	for(i = 0; i < 8 && lty & 15 ; i++) {
-		dashlist[i] = lty & 15;
-		lty = lty >> 4;
+	for(i = 0; i < 8 && lineType & 15 ; i++) {
+		dashlist[i] = lineType & 15;
+		lineType = lineType >> 4;
 	}
 	nlty = i; i = 0; 
 	
-	fprintf(outputFile, "dash pattern=");
+	fprintf(tikzInfo->outputFile, "\\tikzset{f/.style={dash pattern=");
 	
 	/*Set the dash pattern*/
 	while(i < nlty){
 		if( (i % 2) == 0 ){
-			fprintf(outputFile, "on %dpt ", dashlist[i]);
+			fprintf(tikzInfo->outputFile, "on %dpt ", dashlist[i]);
 		}else{
-			fprintf(outputFile, "off %dpt ", dashlist[i]);
+			fprintf(tikzInfo->outputFile, "off %dpt ", dashlist[i]);
 		}
 		i++;
 	}
-	fprintf(outputFile, ",");
+	fprintf(tikzInfo->outputFile, "}}\n");
 }
 
-static void SetLineWeight(int lwd, FILE *outputFile){
+static void SetLineJoin(R_GE_linejoin lineJoin, 
+						double lineMitre, tikzDevDesc *tikzInfo){
 	
-	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
-	if(lwd != 1)
-		fprintf(outputFile,"line width=%4.1fpt,",0.4*lwd);
-}
-
-static void SetAlpha(int color, Rboolean fill, pDevDesc deviceInfo){
-	
-	/* If the parameter fill == TRUE then set the fill opacity otherwise set 
-	 * the outline opacity
-	*/
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	unsigned int alpha = R_ALPHA(color);
-	
-	/*draw opacity and fill opacity separately here*/
-	if(!R_OPAQUE(color)){
-		if(fill == TRUE)
-			fprintf(tikzInfo->outputFile,"fill opacity=%4.2f,",alpha/255.0);
-		else
-			fprintf(tikzInfo->outputFile,"draw opacity=%4.2f,",alpha/255.0);
-	}
-	
-}
-
-
-static void SetLineJoin(R_GE_linejoin ljoin, double lmitre, pDevDesc deviceInfo){
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	switch (ljoin) {
+	switch (lineJoin) {
 		case GE_ROUND_JOIN:
-			fprintf(tikzInfo->outputFile, "line join=round,");
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{g/.style={line join=round}}\n");
 			break;
 		case GE_MITRE_JOIN:
-			/*Default if nothing is specified*/
-			SetMitreLimit(lmitre, tikzInfo->outputFile);
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{g/.style={line join=miter}}\n");
+			SetMitreLimit(lineMitre, tikzInfo);
 			break;
 		case GE_BEVEL_JOIN:
-			fprintf(tikzInfo->outputFile, "line join=bevel,");
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{g/.style={line join=bevel}}\n");
+		default:
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{g/.style={line join=round}}\n");
 	}
 }
 
-static void SetMitreLimit(double lmitre, FILE *outputFile){
+static void SetMitreLimit(double lineMitre, tikzDevDesc *tikzInfo){
 	
-	if(lmitre != 10)
-		fprintf(outputFile, "mitre limit=%4.2f,",lmitre);
+	fprintf(tikzInfo->outputFile, 
+		"\\tikzset{h/.style={miter limit=%4.2f}}\n",
+		lineMitre);
 	
 }
 
-static void SetLineEnd(R_GE_linejoin lend, pDevDesc deviceInfo){
-	
-	/* Shortcut pointers to variables of interest. */
-	tikzDevDesc *tikzInfo = (tikzDevDesc *) deviceInfo->deviceSpecific;
-	
-	switch (lend) {
+static void SetLineEnd(R_GE_linejoin lineEnd, tikzDevDesc *tikzInfo){
+
+	switch (lineEnd) {
 		case GE_ROUND_CAP:
-			fprintf(tikzInfo->outputFile, "line cap=round,");
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{i/.style={line cap=round}}\n");
 			break;
 		case GE_BUTT_CAP:
-			/*Default if nothing is specified*/
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{i/.style={line cap=butt}}\n");
 			break;
 		case GE_SQUARE_CAP:
-			fprintf(tikzInfo->outputFile, "line cap=rect,");
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{i/.style={line cap=rect}}\n");
+		default:
+			fprintf(tikzInfo->outputFile, 
+				"\\tikzset{i/.style={line cap=round}}\n");
 	}
+	
 }
 
 
