@@ -171,13 +171,13 @@ static Rboolean TikZ_Setup(
 	tikzInfo->debug = DEBUG;
 	tikzInfo->standAlone = standAlone;
 	tikzInfo->firstClip = TRUE;
-	tikzInfo->oldFillColor = 0;
-	tikzInfo->oldDrawColor = 0;
-	tikzInfo->oldLineType = 0;
-	tikzInfo->oldLineWidth = 0;
-	tikzInfo->oldFillAlpha = 0;
-	tikzInfo->oldDrawAlpha = 0;
-	tikzInfo->oldLineMitre = 0;
+	tikzInfo->oldFillColor = plotParams->fill;
+	tikzInfo->oldDrawColor = plotParams->col;
+	tikzInfo->oldLineType = plotParams->lty;
+	tikzInfo->oldLineWidth = plotParams->lwd;
+	tikzInfo->oldFillAlpha = 255;
+	tikzInfo->oldDrawAlpha = 255;
+	tikzInfo->oldLineMitre = 10;
 	tikzInfo->oldLineJoin = 1;
 	tikzInfo->oldLineEnd = 1;
 	tikzInfo->plotParams = plotParams;
@@ -481,7 +481,11 @@ static void TikZ_Clip( double x0, double x1,
 			
 	/*Define the colors for fill and border*/
 	//SetStylesIfChanged(tikzInfo->plotParams, tikzInfo);
-	fprintf(tikzInfo->outputFile, "\\tikzset{every path/.style={a,b,c,d,e,f,g,h,f}}\n");
+	fprintf(tikzInfo->outputFile, "\\tikzset{every path/.style={FillColor,");
+	fprintf(tikzInfo->outputFile,"DrawColor, FillAlpha,");
+	fprintf(tikzInfo->outputFile,"DrawAlpha, LineWidth, ");
+	fprintf(tikzInfo->outputFile,"DashPattern, LineJoin, ");
+	fprintf(tikzInfo->outputFile,"MitreLimit, LineEnd}}\n");
 	SetAllStyles(tikzInfo->plotParams, tikzInfo);
 }
 
@@ -744,15 +748,15 @@ static void TikZ_Polygon( int n, double *x, double *y,
 */
 static void SetAllStyles(const pGEcontext plotParams, tikzDevDesc *tikzInfo){
 	
-	/* a - SetFillColor
-	 * b - SetDrawColor
-	 * c - SetFillAlpha
-	 * d - SetDrawAlpha
-	 * e - SetLineWidth
-	 * f - SetDashPattern
-	 * g - SetLineJoin
-	 * h - SetMiterLimit
-	 * i - SetLineEnd
+	/* FillColor - SetFillColor
+	 * DrawColor - SetDrawColor
+	 * FillAlpha - SetFillAlpha
+	 * DrawAlpha - SetDrawAlpha
+	 * LineWidth - SetLineWidth
+	 * DashPattern - SetDashPattern
+	 * LineJoin - SetLineJoin
+	 * MitreLimit - SetMitreLimit
+	 * LineEnd - SetLineEnd
 	*/
 
 	SetFillColor(plotParams->fill, tikzInfo);
@@ -842,7 +846,7 @@ static void SetFillColor(int color, tikzDevDesc *tikzInfo){
 			R_GREEN(color)/255.0,
 			R_BLUE(color)/255.0);
 	fprintf(tikzInfo->outputFile, 
-			"\\tikzset{a/.style={fill=FillColor}}\n");
+			"\\tikzset{FillColor/.style={fill=FillColor}}\n");
 	
 }
 
@@ -855,7 +859,7 @@ static void SetDrawColor(int color, tikzDevDesc *tikzInfo){
 			R_GREEN(color)/255.0,
 			R_BLUE(color)/255.0);
 	fprintf(tikzInfo->outputFile, 
-			"\\tikzset{b/.style={draw=DrawColor}}\n");
+			"\\tikzset{DrawColor/.style={draw=DrawColor}}\n");
 	
 }
 
@@ -867,7 +871,7 @@ static void SetFillAlpha(int color, tikzDevDesc *tikzInfo){
 	/*draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){
 		fprintf(tikzInfo->outputFile,
-			"\\tikzset{c/.style={fill opacity=%4.2f}}\n",
+			"\\tikzset{FillAlpha/.style={fill opacity=%4.2f}}\n",
 			alpha/255.0);
 	}
 	
@@ -881,7 +885,7 @@ static void SetDrawAlpha(int color, tikzDevDesc *tikzInfo){
 	/*draw opacity and fill opacity separately here*/
 	if(!R_OPAQUE(color)){
 		fprintf(tikzInfo->outputFile,
-			"\\tikzset{d/.style={draw opacity=%4.2f}}\n",
+			"\\tikzset{DrawAlpha/.style={draw opacity=%4.2f}}\n",
 			alpha/255.0);
 	}
 	
@@ -892,7 +896,7 @@ static void SetLineWidth(int lineWidth, tikzDevDesc *tikzInfo){
 	
 	/*Set the line width, 0.4pt is the TikZ default so scale lwd=1 to that*/
 	fprintf(tikzInfo->outputFile,
-		"\\tikzset{e/.style={line width=%4.1fpt}}\n",0.4*lineWidth);
+		"\\tikzset{LineWidth/.style={line width=%4.1fpt}}\n",0.4*lineWidth);
 		
 }
 
@@ -928,7 +932,7 @@ static void SetDashPattern(int lineType, tikzDevDesc *tikzInfo){
 	}
 	nlty = i; i = 0; 
 	
-	fprintf(tikzInfo->outputFile, "\\tikzset{f/.style={dash pattern=");
+	fprintf(tikzInfo->outputFile, "\\tikzset{DashPattern/.style={dash pattern=");
 	
 	/*Set the dash pattern*/
 	while(i < nlty){
@@ -948,26 +952,26 @@ static void SetLineJoin(R_GE_linejoin lineJoin,
 	switch (lineJoin) {
 		case GE_ROUND_JOIN:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{g/.style={line join=round}}\n");
+				"\\tikzset{LineJoin/.style={line join=round}}\n");
 			break;
 		case GE_MITRE_JOIN:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{g/.style={line join=miter}}\n");
+				"\\tikzset{LineJoin/.style={line join=miter}}\n");
 			SetMitreLimit(lineMitre, tikzInfo);
 			break;
 		case GE_BEVEL_JOIN:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{g/.style={line join=bevel}}\n");
+				"\\tikzset{LineJoin/.style={line join=bevel}}\n");
 		default:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{g/.style={line join=round}}\n");
+				"\\tikzset{LineJoin/.style={line join=round}}\n");
 	}
 }
 
 static void SetMitreLimit(double lineMitre, tikzDevDesc *tikzInfo){
 	
 	fprintf(tikzInfo->outputFile, 
-		"\\tikzset{h/.style={miter limit=%4.2f}}\n",
+		"\\tikzset{MitreLimit/.style={miter limit=%4.2f}}\n",
 		lineMitre);
 	
 }
@@ -977,18 +981,18 @@ static void SetLineEnd(R_GE_linejoin lineEnd, tikzDevDesc *tikzInfo){
 	switch (lineEnd) {
 		case GE_ROUND_CAP:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{i/.style={line cap=round}}\n");
+				"\\tikzset{LineEnd/.style={line cap=round}}\n");
 			break;
 		case GE_BUTT_CAP:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{i/.style={line cap=butt}}\n");
+				"\\tikzset{LineEnd/.style={line cap=butt}}\n");
 			break;
 		case GE_SQUARE_CAP:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{i/.style={line cap=rect}}\n");
+				"\\tikzset{LineEnd/.style={line cap=rect}}\n");
 		default:
 			fprintf(tikzInfo->outputFile, 
-				"\\tikzset{i/.style={line cap=round}}\n");
+				"\\tikzset{LineEnd/.style={line cap=round}}\n");
 	}
 	
 }
