@@ -79,3 +79,12 @@ function(libname, pkgname) {
 # Any variables defined in here will be hidden
 # from normal users.
 .tikzOptions <- new.env()
+
+tikzStringMatch <- list()
+tikzStringMatch[['SingleDigitInteger']] <- '^[0-9]$'
+tikzStringMatch[['TwoDigitInteger']] <- '^[0-9][0-9]$'
+tikzStringMatch[['ThreeDigitInteger']] <- '^[0-9][0-9][0-9]$'
+tikzStringMatch[['OneDigitNumberWithOneDecimalPlace']] <- '^[0-9][.][0-9]$'
+tikzStringMatch[['TwoDigitNumberWithOneDecimalPlace']] <- '^[0-9][0-9][.][0-9]$'
+tikzStringMatch[['ThreeDigitNumberWithOneDecimalPlace']] <- '^[0-9][0-9][0-9][.][0-9]$'
+tikzStringMatch[['TwoDigitNumberWithTwoDecimalPlaces']] <- '^[0-9][0-9][.][0-9][0-9]$'

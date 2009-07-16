@@ -19,12 +19,17 @@ function( texString ){
 	# the variable before we exit in order to keep .tikzOptions
 	# clean.
 	assign('texString', texString, envir=.tikzOptions)
-
+	
+	# set the db key for the current string in .tikzOptions
+	# this whole environment thing also give me the willies 
+	#but it is necessary
+	checkSimpleStrings( texString )
+	
 	# Check for the string.
-	if( evalq( dbExists(dictionary, sha1(texString) ), .tikzOptions) ){
+	if( evalq( dbExists(dictionary, key ), .tikzOptions) ){
 
 		# Yay! The width exists! Recover and return it.
-		width <- evalq( dictionary[[ sha1(texString) ]], .tikzOptions)
+		width <- evalq( dictionary[[ key ]], .tikzOptions)
 		# Clean up .tikzOptions.
 		remove('texString', envir= .tikzOptions, inherits=F)
 		return( width )
@@ -50,11 +55,11 @@ function( texString, width ){
 	# statments are here and why they give me a bad feeling.
 	assign('texString', texString, envir=.tikzOptions)
 	assign('width', width, envir=.tikzOptions)
-
-	evalq( dictionary[[ sha1(texString) ]] <- width, .tikzOptions)
+	
+	evalq( dictionary[[ key ]] <- width, .tikzOptions)
 
 	# Clean up .tikzOptions.
-	remove(list=c('texString','width'), envir= .tikzOptions, inherits=F)
+	remove(list=c('texString','width','key'), envir= .tikzOptions, inherits=F)
 
 	# Return nothing.
 	invisible()
@@ -99,6 +104,34 @@ function(){
 	# Return nothing.
 	invisible()
 
+}
+
+
+checkSimpleStrings <- 
+function( texString ){
+	
+	# This function check a string agains a set of standard 
+	# simple strings.  It returns the key for the standard string
+	# if a match is found, otherwise return a sha1 hash of the string
+	
+	#tikzStringMatch patterns are defined in zzz.R
+	
+	#try and match the string
+	evalq(
+		{ 
+			match <- sapply( sapply( tikzStringMatch, grep, texString ), length )
+			key <- names( tikzStringMatch )[ as.logical( match ) ]
+			
+			# If there was no matches, return the hash of the string
+			if( length( key ) == 0)
+				key <- sha1( texString )
+		},
+		.tikzOptions )
+	
+	#return nothing because key is set in .tikzOptions
+	#this is necessary because it needs to be available when 
+	#values are set in the dictionary. 
+	invisible()
 }
 
 
