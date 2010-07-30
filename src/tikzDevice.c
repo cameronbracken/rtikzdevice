@@ -544,7 +544,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
 
 	/*Show only for debugging*/
 	if(tikzInfo->debug == TRUE)
-		printOutput(tikzInfo,"%% Beginning tikzpicture");
+		printOutput(tikzInfo,"%% Beginning tikzpicture\n");
 		
 	/* Start the tikz environment if we have not specified a bare bones plot. */
 	if( tikzInfo->bareBones != TRUE ){

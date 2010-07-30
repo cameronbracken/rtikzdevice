@@ -126,9 +126,15 @@ function( TeXMetrics ){
 	writeLines(getOption("tikzMetricPackages"), texIn)
 
 	writeLines("\\batchmode", texIn)
-
+	
 	# Begin a tikz picture.
 	writeLines("\\begin{tikzpicture}", texIn)
+
+	# Selecting Helvetica
+	#writeLines("\\renewcommand{\\rmdefault}{phv}", texIn)
+	if( getOption('tikzUseHelvetica') ){
+	  writeLines("{\\fontfamily{phv}\\selectfont", texIn)
+	}
 
 	# Insert the value of cex into the node options.
 	nodeOpts <- paste('\\node[inner sep=0pt, outer sep=0pt, scale=',
@@ -219,6 +225,8 @@ function( TeXMetrics ){
 			node{ \\typeout{tikzTeXDescent=\\n1} };", texIn)
 
 	}
+	if( getOption('tikzUseHelvetica') )
+	  writeLines("}", texIn)
 
 	# Stop before creating output
 	writeLines("\\makeatletter", texIn)
