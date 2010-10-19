@@ -228,15 +228,15 @@ function( TeXMetrics ){
 	close( texIn )
 
 	# Recover the latex command.
-	latexCmd <- getOption('tikzLatex')
+	xelatexCmd <- getOption('tikzXeLatex')
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
-	latexCmd <- paste( latexCmd, '-interaction=batchmode',
+	xelatexCmd <- paste( xelatexCmd, '-interaction=batchmode',
 		'-output-directory', texDir, texFile)
 
 	# Run that shit.
-	silence <- system( latexCmd, intern=T, ignore.stderr=T)
+	silence <- system( xelatexCmd, intern=T, ignore.stderr=T)
 
 	# Open the log file.
 	texOut <- file( texLog, 'r' )
