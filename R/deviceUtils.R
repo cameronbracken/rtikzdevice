@@ -74,18 +74,19 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\PreviewEnvironment{pgfpicture}\n",
       "\\setlength\\PreviewBorder{0pt}\n"
     ),
-
+ 
+    tikzFooter = "\\end{document}\n",
+ 
     tikzMetricPackages = c(
-      "\\usepackage[utf8]{inputenc}\n",
       # The fontenc package is very important here! 
       # R assumes the output device is uing T1 encoding.
       # LaTeX defaults to OT1. This package makes the
       # symbol codes consistant for both systems.
-      "\\usepackage[T1]{fontenc}\n",
-      "\\usetikzlibrary{calc}\n"
+      #"\\usepackage[T1]{fontenc}\n",
+      "\\usetikzlibrary{calc}\n",
+      "\\usepackage{fontspec,xunicode}\n"
     ),
- 
-    tikzFooter = "\\end{document}\n",
+
  
     tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
  

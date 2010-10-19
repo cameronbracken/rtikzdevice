@@ -228,11 +228,11 @@ function( TeXMetrics ){
 	close( texIn )
 
 	# Recover the latex command.
-	latexCmd <- getOption('tikzLatex')
+	xelatexCmd <- getOption('tikzXeLatex')
 
 	# Append the batchmode flag to increase LaTeX 
 	# efficiency.
-	latexCmd <- paste( latexCmd, '-interaction=batchmode', '-halt-on-error',
+	xelatexCmd <- paste( xelatexCmd, '-interaction=batchmode',
 		'-output-directory', texDir, texFile)
 
   # avoid warnings about non-zero exit status, we know tex exited abnormally
@@ -241,7 +241,7 @@ function( TeXMetrics ){
   options(warn=-1)
 
 	# Run that shit.
-	silence <- system( latexCmd, intern=T, ignore.stderr=T)
+	silence <- system( xelatexCmd, intern=T, ignore.stderr=T)
 
 	# set the options back to normal
 	options(warn=w)
