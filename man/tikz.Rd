@@ -150,12 +150,12 @@ options( tikzMetricPackages = c(
 
 \item{\code{tikzSanitizeCharacters}}{ A character vector of special latex characters to replace. These values should correspond to the replacement values from the \code{tikzReplacementCharacters} option The default value is:
 \preformatted{
-options( tikzSanitizeCharacters = c('\%','\$','\}','\{','^') )
+options( tikzSanitizeCharacters = c('\%','\$','\}','\{','^','_') )
 }}
 
 \item{\code{tikzReplacementCharacters}}{ A character vector of replacements for special latex characters. These values should correspond to the values from the \code{tikzSanitizeCharacters} option The default value is:
 \preformatted{
-options( tikzReplacementCharacters = c('\\\\\%','\\\\\$','\\\\}','\\\\{','\\\\^{}'))
+options( tikzReplacementCharacters = c('\\\\\%','\\\\\$','\\\\}','\\\\{','\\\\^{}','\\\\_{}'))
 }}
 
 } 
