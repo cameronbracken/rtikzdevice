@@ -3,4 +3,5 @@ import( filehash )
 
 # Export user functions
 export( 'tikz', 'getLatexStrWidth', 'getLatexCharMetrics', 'setTikzDefaults', 
-		'tikzAnnotate', 'tikzCoord', 'sanitizeTexString')
+		'tikzAnnotate', 'tikzCoord', 'sanitizeTexString', 
+		'anyMultibyteUTF8Characters')
