@@ -238,6 +238,24 @@ function(main){
 
   print( testPlot )
 
+},
+
+# Test of utf8 output (xelatex must be available)
+function(main){
+
+  n <- 10
+  x <- matrix(intToUtf8(seq(161,,1,10*n),multiple=T),n)
+
+  oldopt <- getOption('tikzLatexPackages')
+  options(tikzLatexPackages = getOption('tikzXelatexPackages'))
+  
+  plot(1:n,type='n',xlab='',ylab='',axes=F, main=main)
+  for(i in 1:n)
+    for(j in 1:n)
+      text(i,j,x[i,j])
+  
+  options(tikzLatexPackages = oldopt)
+
 }
 
 ## ADD NEW TESTS HERE
