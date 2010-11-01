@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-require(getopt)
-require(tikzDevice)
+suppressMessages(require(getopt))
+suppressMessages(require(tikzDevice))
 
 #Column 3: Argument mask of the flag. An integer. Possible values: 
 # 0=no argument, 1=required argument, 2=optional argument. 
@@ -18,10 +18,7 @@ setopts <- function(){
 	options(tikzDocumentDeclaration = '\\documentclass{article}')
 		# The preview package must be loaded first with the xetex driver option
 	options( tikzLatexPackages = c(
-		"\\usepackage[active,tightpage,xetex]{preview}"
-		,"\\PreviewEnvironment{pgfpicture}"
-		,"\\setlength\\PreviewBorder{0pt}"
-		,"\\usepackage{fontspec}"
+		"\\usepackage{fontspec}"
 		,"\\usepackage[colorlinks, breaklinks, pdftitle={The Beauty of LaTeX},pdfauthor={Taraborelli, Dario}]{hyperref}"
 		,"\\usepackage{tikz}"
 		,"\\usepackage{color}"
@@ -48,6 +45,9 @@ setopts <- function(){
 		,"\\fontspec[Ligatures={Common, Rare},Variant=1,Swashes={LineInitial, LineFinal}]{Zapfino}"
 		,"\\fontsize{25pt}{30pt}\\selectfont #1}%"
 		,"\\newcommand{\\smallprint}[1]{\\fontspec{Hoefler Text}\\fontsize{10pt}{13pt}\\color{Gray}\\selectfont #1}%\n"
+		,"\\usepackage[active,tightpage,xetex]{preview}"
+		,"\\PreviewEnvironment{pgfpicture}"
+		,"\\setlength\\PreviewBorder{0pt}"
 		))
 	
 }
@@ -67,7 +67,7 @@ x <- function(){
 		,"\\smallprint{\\\\\\emph{Some rights reserved}. \\href{http://creativecommons.org/licenses/by-sa/3.0/}{\\textsc{cc-by-sa}}}"
 	)
 lim <- 0:(length(label)+1)
-plot(lim,lim,cex=0,pch='.',xlab = 'XeLaTeX Test',ylab='', main = title[1], sub = title[2])
+plot(lim,lim,cex=0,pch='.',xlab = title[2],ylab='', main = title[1])
 for(i in 1:length(label))
 	text(i,i,label[i])
 
