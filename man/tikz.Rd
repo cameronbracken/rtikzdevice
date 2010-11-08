@@ -100,8 +100,54 @@ The tricky bit is the specification of the ``base font size''.  By default the \
 This regular expression will return 10 as the base pointsize to be used by the device.  If the regular expression fails to produce a match, the value of the \code{pointsize} argument to the \code{tikz} function will be used.
 }
 
+\section{Unicode Character Support}{
+
+Version 0.6.0 introduced support for (multibyte) Unicode characters in the text of graphics.  There are a few important implications/limitations of this feature:
+
+\itemize{
+
+\item{\strong{System Requirements: }}{A working version of XeLaTeX along with the packages fontspec and xunicode are required for direct processing of Unicode input.  If \code{tikzDevice} cannot find XeLaTeX then it will default to only allowing ASCII characters.
+}
+
+\item{\strong{Automatic Detection of Unicode Characters: }}{\code{tikzDevice} will automatically recognize multibyte characters such that the metrics and string width for the character/string will be calculated using the \code{tikzUnicodeMetricPackages} and \code{tikzXelatexPackages} via a call to XeLaTeX (from the option \code{tikzXelatex}).  
+}
+
+\item{\strong{Unicode character and the \code{standAlone} option: }}{There is no way to know before a tikz device is opened and the \code{standAlone} header is written whether any of the text input will have unicode characters. Consequently you must set the values of \code{tikzLatexPackages} manually before you open the device:
+
+\preformatted{
+options(tikzLatexPackages=getOption('tikzXelatexPackages'))
+}
+
+or
+
+\preformatted{
+
+tikz(..., packages=getOption('tikzXelatexPackages'))
+
+}
+
+}
+
+\item{\strong{Encoding: }}{\code{tikzDevice} will try its best to convert characters from other encodings but do not count on it converting things correctly, best to do the conversion yourself beforehand to avoid unexpected output. 
+}
+
+\item{\strong{Fonts: }}{Having a Unicode character actually show up in your LaTeX document relies on the font you use having the glyph available. We leave it up to the user to know for themselves what is available.  Otherwise you will likely just get no output in place of where the character should be.
+}
+
+\item{\strong{plotmath: }}{There is specifically no support for input of plotmath characters as unicode since the user can simply input LaTeX math directly.  We strongly encourage the use of LaTeX math over plotmath for style and consistency's sake.  A consequence of this is that most of the \R{} examples and demos of plotmath won't work without significant manipulation (your milage may vary but you may get anything from errors to warnings to documents that mysteriously won't compile).  That is not to say that the output could not be duplicated with \code{tikzDevice} but the examples will not work out of the box. 
+}
+
+\item{\strong{Compiling: }}{A graphic that contains UTF-8 characters must be compiled with XeLaTeX (or possibly LuaLaTeX) with the xunicode and fontspec packages enabled.}
+
+\item{\strong{ASCII only: }}{Everything should be exactly the same as previous versions if only ASCII (single byte) characters are used (i.e. character codes less than 132).
+}
+
+}
+
+}
+
 \note{
-To compile the output of \code{tikz} a working installation of LaTeX and PGF is needed.  Current releases of the TikZ package are available from 
+To compile the output of \code{tikz} a working installation of LaTeX (including xetex for UTF-8 encoded output) and PGF is needed.  Current releases of the TikZ package are available from 
 \url{http://www.ctan.org}. The package may also be installed through the MikTeX package manager on Windows 
 or using the TeX Live package manager, \code{tlmgr}, on Unix/Linux/OS X. The TeX Live package manager will 
 only be installed by default for TeX Live distributions dated 2008 and later. Both bleeding-edge and release 
