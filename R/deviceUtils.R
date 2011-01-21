@@ -103,10 +103,12 @@ setTikzDefaults <- function( overwrite = TRUE ){
       "\\usetikzlibrary{calc}\n",
       "\\usepackage{fontspec,xunicode}\n"
     ),
-    
-    tikzSanitizeCharacters = c('%','$','}','{','^','_'), 
+
  
-    tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}')
+    tikzSanitizeCharacters = c('%','$','}','{','^','_','#','&','~'), 
+ 
+    tikzReplacementCharacters = c('\\%','\\$','\\}','\\{','\\^{}','\\_{}',
+      '\\#','\\&','\\char`\\~')
 
   )
 

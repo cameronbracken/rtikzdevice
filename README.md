@@ -79,9 +79,8 @@ to the development of the device!
 
 ---
 
-### Version: 0.6.0
-
-**Under development**
+### Version: 0.5.4
+*Under development, will most likely become 0.6.0*
 
 ---
 #### New Features
