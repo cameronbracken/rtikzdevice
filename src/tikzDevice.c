@@ -79,10 +79,9 @@ SEXP TikZ_StartDevice ( SEXP args ){
   const char *bg, *fg;
   double width, height;
   Rboolean standAlone, bareBones;
-  const char *documentDeclaration, *packages, *footer;
+  const char *documentDeclaration, *packages, *footer, *object;
   double baseSize;
-  Rboolean console, sanitize;
-
+  Rboolean console, sanitize, raw;
   /* 
    * pGEDevDesc is a variable provided by the R Graphics Engine
    * that represents a graphics device to the rest of the R system.
@@ -147,11 +146,15 @@ SEXP TikZ_StartDevice ( SEXP args ){
    * escaping of TeX special characters such as %,_,\, etc?
   */ 
   sanitize = asLogical(CAR(args)); args = CDR(args);
-
+  
   /*
    * See the definition of tikz_engine in tikzDevice.h
    */
-  int engine = asInteger(CAR(args));
+  int engine = asInteger(CAR(args)); args = CDR(args);
+  
+  raw = asLogical(CAR(args)); args = CDR(args);
+  object = CHAR(asChar(CAR(args))); 
+  
 
   /* Ensure there is an empty slot avaliable for a new device. */
   R_CheckDeviceAvailable();
@@ -182,7 +185,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
     */
     if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize,
         standAlone, bareBones, documentDeclaration, packages,
-        footer, console, sanitize, engine ) ){
+        footer, console, sanitize, engine, raw, object ) ){
       /* 
        * If setup was unsuccessful, destroy the device and return
        * an error message.
@@ -226,7 +229,8 @@ static Rboolean TikZ_Setup(
   Rboolean standAlone, Rboolean bareBones,
   const char *documentDeclaration,
   const char *packages, const char *footer, 
-  Rboolean console, Rboolean sanitize, int engine ){
+  Rboolean console, Rboolean sanitize, int engine, 
+  Rboolean raw,  const char *object){
 
   /* 
    * Create tikzInfo, this variable contains information which is
@@ -285,6 +289,9 @@ static Rboolean TikZ_Setup(
   tikzInfo->polyLine = FALSE;
   tikzInfo->console = console;
   tikzInfo->sanitize = sanitize;
+  tikzInfo->raw = raw;
+  tikzInfo->rawObj = object;
+  
 
   /* Incorporate tikzInfo into deviceInfo. */
   deviceInfo->deviceSpecific = (void *) tikzInfo;
@@ -554,8 +561,43 @@ static void TikZ_Close( pDevDesc deviceInfo){
       tikzInfo->stringWidthCalls);
 
   /* Close the file and destroy the tikzInfo structure. */
-  if(tikzInfo->console == FALSE)
+  if(tikzInfo->console == FALSE && tikzInfo->raw == FALSE)
     fclose(tikzInfo->outputFile);
+  
+  if(tikzInfo->raw == TRUE){
+    /*
+    * write the current lines to the object named 'obj' in the .tikzInternal
+    * environment, then expose the object when the device is closed
+    */
+    SEXP namespace;
+    PROTECT( namespace = TIKZ_NAMESPACE );
+
+    SEXP finish_raw = findFun(
+        install("finishRaw"), namespace);
+
+    SEXP RCallBack;
+    PROTECT( RCallBack = allocVector(LANGSXP,3) );
+
+    // Place the function into the first slot of the SEXP.
+    SETCAR( RCallBack, finish_raw );
+
+    // Place the string into the second slot of the SEXP.
+    SETCADR( RCallBack, mkString( tikzInfo->rawObj ) );
+    SET_TAG( CDR( RCallBack ), install("obj") );
+    
+    // Place the string into the second slot of the SEXP.
+    SETCADDR( RCallBack, mkString( tikzInfo->outFileName ) );
+    SET_TAG( CDDR( RCallBack ), install("filename") );
+
+    /*
+     * Call the R function, capture the result.
+    */
+    SEXP result;
+    PROTECT( result = eval(RCallBack, namespace) );
+
+    UNPROTECT(3);
+    
+  }
 
   /* Deallocate pointers */
   free(tikzInfo->outFileName);
@@ -1888,10 +1930,24 @@ static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
   va_list(ap);
   va_start(ap, format);
   
-  if(tikzInfo->console == TRUE)
+  if(tikzInfo->console == TRUE){
+    
     Rvprintf(format, ap);
-  else
+    
+  }else if(tikzInfo->raw == TRUE){
+    
+    char output_lines[1000];
+    char *poutput_lines = (char *) output_lines;
+    //Rprintf("Writing Raw to object %s\n", tikzInfo->rawObj);
+    vsprintf(poutput_lines, format, ap);
+    //Rprintf("Writing Raw %s", tikzInfo->output_lines);
+    write_raw(tikzInfo->rawObj, poutput_lines);
+    
+  }else{
+    
     vfprintf(tikzInfo->outputFile, format, ap);
+    
+  }
   
   va_end(ap);
   
@@ -2027,7 +2083,6 @@ static Rboolean contains_multibyte_chars(const char *str){
   return(asLogical(result));
 }
 
-
 /*
  * This function is responsible for converting lengths given in page
  * dimensions (ie. inches, cm, etc.) to device dimensions (currenty
@@ -2038,4 +2093,42 @@ static Rboolean contains_multibyte_chars(const char *str){
 static double dim2dev( double length ){
   return length*72.27;
 }
+
+
+static Rboolean write_raw(const char *obj, const char *str){
+  /*
+  * write the current lines to the object named 'obj' in the .tikzInternal
+  * environment, then expose the object when the device is closed
+  */
+  SEXP namespace;
+  PROTECT( namespace = TIKZ_NAMESPACE );
+
+  SEXP write_raw = findFun(
+      install("writeRaw"), namespace);
+
+  SEXP RCallBack;
+  PROTECT( RCallBack = allocVector(LANGSXP,3) );
+
+  // Place the function into the first slot of the SEXP.
+  SETCAR( RCallBack, write_raw );
+
+  // Place the string into the second slot of the SEXP.
+  SETCADR( RCallBack, mkString( obj ) );
+  SET_TAG( CDR( RCallBack ), install("obj") );
+  
+  // Place the string into the second slot of the SEXP.
+  SETCADDR( RCallBack, mkString( str ) );
+  SET_TAG( CDDR( RCallBack ), install("lines") );
+
+  /*
+   * Call the R function, capture the result.
+  */
+  SEXP result;
+  PROTECT( result = eval(RCallBack, namespace) );
+
+  UNPROTECT(3);
+
+  return(asLogical(result));
+}
+
 

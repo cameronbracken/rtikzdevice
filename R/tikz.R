@@ -179,7 +179,8 @@
 tikz <-
 function (file = "./Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
-  bareBones = FALSE, console = FALSE, sanitize = FALSE,
+  bareBones = FALSE, console = FALSE,sanitize = FALSE,
+  raw = FALSE, object = NULL,
   engine = getOption("tikzDefaultEngine"),
   documentDeclaration = getOption("tikzDocumentDeclaration"),
   packages,
@@ -244,7 +245,7 @@ function (file = "./Rplots.tex", width = 7, height = 7,
 
   .External('TikZ_StartDevice', file, width, height, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,
-    sanitize, engine,
+    sanitize, engine, raw, object,
     PACKAGE='tikzDevice')
 
   invisible()
