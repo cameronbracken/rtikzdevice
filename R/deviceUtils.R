@@ -203,5 +203,6 @@ finishRaw <- function( obj, filename ){
   raw_object$filename <- filename
   
   assign(obj, raw_object, envir=env)
+  return( all.equal( get(obj, envir = .tikzInternal, inherits = FALSE), raw_object$lines ) )
   
 }

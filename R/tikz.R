@@ -64,9 +64,15 @@
 #'   LaTeX document via \code{\link{sink}}.  If TRUE, the \code{file} argument
 #'   is ignored. Setting \code{file=''} is equivalent to setting
 #'   \code{console=TRUE}.
-#' @param sanitize Should special latex characters be replaced (Default FALSE).
+#' @param sanitize Should special latex characters be replaced (Default \code{FALSE}).
 #'   See the section ``Options That Affect Package Behavior'' for which
 #'   characters are replaced.
+#' @param raw Should the output of tikzDevice be directed to a raw R object 
+#'   (default FALSE), ignored if \code{console} is \code{TRUE}.
+#' @param object A character string specifying the name of the R object to 
+#'   save tikzDevice output to (only used when \code{raw} is \code{TRUE}).  
+#'   Should be a valid R variable name.  If omitted, an object named 
+#'   \code{tikz.plot} will be created in the calling environment.
 #' @param engine a string specifying which TeX engine to use. Possible values
 #'   are 'pdftex' and 'xetex'. See the Unicode section of
 #'   \link{tikzDevice-package} for details.
@@ -179,7 +185,7 @@
 tikz <-
 function (file = "./Rplots.tex", width = 7, height = 7,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
-  bareBones = FALSE, console = FALSE,sanitize = FALSE,
+  bareBones = FALSE, console = FALSE, sanitize = FALSE,
   raw = FALSE, object = NULL,
   engine = getOption("tikzDefaultEngine"),
   documentDeclaration = getOption("tikzDocumentDeclaration"),
@@ -242,6 +248,10 @@ function (file = "./Rplots.tex", width = 7, height = 7,
     paste( paste(documentDeclaration, collapse='\n'), collapse='\n')
   packages <- paste( paste( packages, collapse='\n'), collapse='\n')
   footer <- paste( paste( footer,collapse='\n'), collapse='\n')
+  
+    # console option trumps raw output
+  if(console) raw <- FALSE
+  if(raw && is.null(object)) object <- 'tikz.plot'
 
   .External('TikZ_StartDevice', file, width, height, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,

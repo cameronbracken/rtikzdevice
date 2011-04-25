@@ -566,8 +566,8 @@ static void TikZ_Close( pDevDesc deviceInfo){
   
   if(tikzInfo->raw == TRUE){
     /*
-    * write the current lines to the object named 'obj' in the .tikzInternal
-    * environment, then expose the object when the device is closed
+    * If we are in raw mode, callback to R to finish the raw object and assign
+    * it the the calling environment.
     */
     SEXP namespace;
     PROTECT( namespace = TIKZ_NAMESPACE );
@@ -581,11 +581,11 @@ static void TikZ_Close( pDevDesc deviceInfo){
     // Place the function into the first slot of the SEXP.
     SETCAR( RCallBack, finish_raw );
 
-    // Place the string into the second slot of the SEXP.
+    // Place the raw object name into the second slot of the SEXP.
     SETCADR( RCallBack, mkString( tikzInfo->rawObj ) );
     SET_TAG( CDR( RCallBack ), install("obj") );
     
-    // Place the string into the second slot of the SEXP.
+    // Place the file name into the third slot of the SEXP.
     SETCADDR( RCallBack, mkString( tikzInfo->outFileName ) );
     SET_TAG( CDDR( RCallBack ), install("filename") );
 
@@ -594,6 +594,9 @@ static void TikZ_Close( pDevDesc deviceInfo){
     */
     SEXP result;
     PROTECT( result = eval(RCallBack, namespace) );
+    
+    if(asLogical(result) == FALSE)
+      error("Problem finishing raw object.");
 
     UNPROTECT(3);
     
@@ -1936,12 +1939,17 @@ static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
     
   }else if(tikzInfo->raw == TRUE){
     
+    // Pointer to capture vsprintf output
+    // Will this be enough? Maybe not for very long strings....
     char output_lines[1000];
     char *poutput_lines = (char *) output_lines;
-    //Rprintf("Writing Raw to object %s\n", tikzInfo->rawObj);
+    // Print the formatted string to the character string 
     vsprintf(poutput_lines, format, ap);
-    //Rprintf("Writing Raw %s", tikzInfo->output_lines);
-    write_raw(tikzInfo->rawObj, poutput_lines);
+    // Write the line to the raw object at the R level
+    Rboolean raw_success = write_raw(tikzInfo->rawObj, poutput_lines);
+    
+    if(raw_success == FALSE)
+       error("Error writing to raw object.");
     
   }else{
     
@@ -2095,7 +2103,7 @@ static double dim2dev( double length ){
 }
 
 
-static Rboolean write_raw(const char *obj, const char *str){
+static Rboolean write_raw(const char *objName, const char *str){
   /*
   * write the current lines to the object named 'obj' in the .tikzInternal
   * environment, then expose the object when the device is closed
@@ -2112,11 +2120,11 @@ static Rboolean write_raw(const char *obj, const char *str){
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, write_raw );
 
-  // Place the string into the second slot of the SEXP.
-  SETCADR( RCallBack, mkString( obj ) );
+  // Place the object name into the second slot of the SEXP.
+  SETCADR( RCallBack, mkString( objName ) );
   SET_TAG( CDR( RCallBack ), install("obj") );
   
-  // Place the string into the second slot of the SEXP.
+  // Place the string into the third slot of the SEXP.
   SETCADDR( RCallBack, mkString( str ) );
   SET_TAG( CDDR( RCallBack ), install("lines") );
 
