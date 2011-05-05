@@ -93,3 +93,52 @@ function(
   )
 
 }
+
+
+writeRaw <- function(obj, dateStamp, lines, envir = .tikzInternal){
+  # write lines to the R object (character vector) named `obj'
+  # do the evaluation in the specified environment, if the 
+  # object does not exist, create it.
+  
+    # pull out the existing saved plots
+  plots <- try( get('plots', envir=envir, inherits = FALSE), silent=TRUE )
+  
+    # if the plots object does not exist yet, create it
+  if(class(plots) == 'try-error' ) plots <- list()
+    # if the current plot does not exist yet, create it
+  if(is.null(plots[[dateStamp]])){
+    plots[[dateStamp]] <- list()
+    plots[[dateStamp]]$dateStamp <- dateStamp
+  }
+  
+    # add the new lines
+  plots[[dateStamp]]$lines <- c(plots[[dateStamp]]$lines, lines)
+    
+    # put the updated plots object back in the .tikzInternal env
+  assign('plots',plots,envir=.tikzInternal)
+  
+  return( all.equal( plots[[dateStamp]]$lines, lines ) )
+
+}
+
+
+finishRaw <- function( obj, dateStamp, filename ){
+  
+    # Assign the raw object to the calling environment 
+    #
+    # Get the environment that tikz() was called from 
+    # one environment up will always be the tikzDevice namespace so 
+    # we need to go two environments up
+    # there is probably a better way to do this...
+  env <- parent.frame(2)
+
+    # create the plot object
+  plots <- get('plots', envir=envir, inherits = FALSE)
+  raw_object <- plots[[dateStamp]]
+  class(raw_object) <- 'tikz'
+  raw_object$filename <- filename
+  
+  assign(obj, raw_object, envir=env)
+  return( all.equal( plots[[dateStamp]], raw_object ) )
+  
+}

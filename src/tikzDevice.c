@@ -291,6 +291,8 @@ static Rboolean TikZ_Setup(
   tikzInfo->sanitize = sanitize;
   tikzInfo->raw = raw;
   tikzInfo->rawObj = object;
+  /* datestamp will always be 20 characters*/
+  tikzInfo->dateStamp = (char*) calloc(20, sizeof(char));
   
 
   /* Incorporate tikzInfo into deviceInfo. */
@@ -576,7 +578,7 @@ static void TikZ_Close( pDevDesc deviceInfo){
         install("finishRaw"), namespace);
 
     SEXP RCallBack;
-    PROTECT( RCallBack = allocVector(LANGSXP,3) );
+    PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
     // Place the function into the first slot of the SEXP.
     SETCAR( RCallBack, finish_raw );
@@ -585,9 +587,13 @@ static void TikZ_Close( pDevDesc deviceInfo){
     SETCADR( RCallBack, mkString( tikzInfo->rawObj ) );
     SET_TAG( CDR( RCallBack ), install("obj") );
     
-    // Place the file name into the third slot of the SEXP.
-    SETCADDR( RCallBack, mkString( tikzInfo->outFileName ) );
-    SET_TAG( CDDR( RCallBack ), install("filename") );
+    // Place the datestamp into the third slot of the SEXP.
+    SETCADDR( RCallBack, mkString( tikzInfo->dateStamp ) );
+    SET_TAG( CDDR( RCallBack ), install("dateStamp") );
+    
+    // Place the file name into the fourth slot of the SEXP.
+    SETCADDDR( RCallBack, mkString( tikzInfo->outFileName ) );
+    SET_TAG( CDR(CDR(CDR( RCallBack ))), install("filename") );
 
     /*
      * Call the R function, capture the result.
@@ -1946,7 +1952,7 @@ static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...){
     // Print the formatted string to the character string 
     vsprintf(poutput_lines, format, ap);
     // Write the line to the raw object at the R level
-    Rboolean raw_success = write_raw(tikzInfo->rawObj, poutput_lines);
+    Rboolean raw_success = write_raw(tikzInfo, poutput_lines);
     
     if(raw_success == FALSE)
        error("Error writing to raw object.");
@@ -1987,7 +1993,10 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
     currentDate = eval(lang1( install("getDateStampForTikz") ),
       namespace )
   );
-
+  
+  // Add the datestamp for the current file to tikzInfo
+  tikzInfo->dateStamp = (char *)CHAR(STRING_ELT(currentDate,0));
+  
   SEXP currentVersion;
   PROTECT(
     currentVersion = eval(lang1( install("getTikzDeviceVersion") ),
@@ -2103,7 +2112,7 @@ static double dim2dev( double length ){
 }
 
 
-static Rboolean write_raw(const char *objName, const char *str){
+static Rboolean write_raw(tikzDevDesc *tikzInfo, const char *str){
   /*
   * write the current lines to the object named 'obj' in the .tikzInternal
   * environment, then expose the object when the device is closed
@@ -2115,18 +2124,22 @@ static Rboolean write_raw(const char *objName, const char *str){
       install("writeRaw"), namespace);
 
   SEXP RCallBack;
-  PROTECT( RCallBack = allocVector(LANGSXP,3) );
+  PROTECT( RCallBack = allocVector(LANGSXP,4) );
 
   // Place the function into the first slot of the SEXP.
   SETCAR( RCallBack, write_raw );
 
   // Place the object name into the second slot of the SEXP.
-  SETCADR( RCallBack, mkString( objName ) );
+  SETCADR( RCallBack, mkString( tikzInfo->rawObj ) );
   SET_TAG( CDR( RCallBack ), install("obj") );
+
+  // Place the datestamp into the third slot of the SEXP.
+  SETCADDR( RCallBack, mkString( tikzInfo->dateStamp ) );
+  SET_TAG( CDDR( RCallBack ), install("dateStamp") );
   
-  // Place the string into the third slot of the SEXP.
-  SETCADDR( RCallBack, mkString( str ) );
-  SET_TAG( CDDR( RCallBack ), install("lines") );
+  // Place the string into the fourth slot of the SEXP.
+  SETCADDDR( RCallBack, mkString( str ) );
+  SET_TAG( CDR(CDR(CDR( RCallBack ))), install("lines") );
 
   /*
    * Call the R function, capture the result.

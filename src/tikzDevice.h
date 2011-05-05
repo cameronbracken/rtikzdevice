@@ -69,6 +69,7 @@ typedef struct {
 	Rboolean sanitize;
   Rboolean raw;
   const char *rawObj;
+  char *dateStamp;
 } tikzDevDesc;
 
 
@@ -176,7 +177,7 @@ static void printOutput(tikzDevDesc *tikzInfo, const char *format, ...);
 static void Print_TikZ_Header( tikzDevDesc *tikzInfo );
 static char *Sanitize(const char *str);
 static Rboolean contains_multibyte_chars(const char *str);
-static Rboolean write_raw(const char *obj, const char *str);
+static Rboolean write_raw(tikzDevDesc *tikzInfo, const char *str);
 static double dim2dev( double length );
 
 #endif // End of Once Only header
