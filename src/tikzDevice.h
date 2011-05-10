@@ -70,6 +70,9 @@ typedef struct {
   Rboolean raw;
   const char *rawObj;
   const char *dateStamp;
+	Rboolean onefile;
+  char *originalFileName;
+  int pageNum;
 } tikzDevDesc;
 
 
@@ -84,7 +87,7 @@ SEXP TikZ_DeviceInfo(SEXP device_num);
 static Rboolean TikZ_Setup(
 		pDevDesc deviceInfo,
 		const char *fileName,
-		double width, double height,
+		double width, double height, Rboolean onefile,
 		const char *bg, const char *fg, double baseSize,
 		Rboolean standAlone, Rboolean bareBones,
 		const char *documentDeclaration,
