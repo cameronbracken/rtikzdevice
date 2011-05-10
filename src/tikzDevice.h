@@ -69,7 +69,7 @@ typedef struct {
 	Rboolean sanitize;
   Rboolean raw;
   const char *rawObj;
-  char *dateStamp;
+  const char *dateStamp;
 } tikzDevDesc;
 
 
@@ -90,7 +90,7 @@ static Rboolean TikZ_Setup(
 		const char *documentDeclaration,
 		const char *packages, const char *footer,
 		Rboolean console, Rboolean sanitize, int engine,
-		Rboolean raw,  const char *object );
+		Rboolean raw,  const char *object, const char *dateStamp );
 
 
 /* Graphics Engine function hooks. Defined in GraphicsDevice.h . */

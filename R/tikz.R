@@ -253,9 +253,11 @@ function (file = "./Rplots.tex", width = 7, height = 7,
   if(console) raw <- FALSE
   if(raw && is.null(object)) object <- 'tikz.plot'
 
+  dateStamp = getDateStampForTikz()
+  
   .External('TikZ_StartDevice', file, width, height, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,
-    sanitize, engine, raw, object,
+    sanitize, engine, raw, object, dateStamp,
     PACKAGE='tikzDevice')
 
   invisible()

@@ -7,7 +7,7 @@
 #' specified in the call to \code{tikz()}, reproducing the default behavior.
 #'
 #' @param x An object of class 'tikz'
-#' @param filename The file to output TikZ code to, defaults to the \codefile} 
+#' @param filename The file to output TikZ code to, defaults to the \code{file} 
 #'   argument of \code{tikz()}
 #' @param raw If \code{TRUE}, print the raw TikZ code to the screen.
 #'
@@ -25,6 +25,12 @@
 #'  plot(1)
 #'  dev.off()
 #'  print(p)
+#'
+#'   # This is eqivalent to tikz(console=TRUE); plot(1); dev.off()
+#'  tikz(raw=TRUE,object='p')
+#'  plot(1)
+#'  dev.off()
+#'  print(p,raw=TRUE)
 #'
 #' @export
 print.tikz <- function(x, filename = x$filename, raw = FALSE){

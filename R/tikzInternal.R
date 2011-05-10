@@ -122,7 +122,7 @@ writeRaw <- function(obj, dateStamp, lines, envir = .tikzInternal){
 }
 
 
-finishRaw <- function( obj, dateStamp, filename ){
+finishRaw <- function( obj, dateStamp, filename, envir = .tikzInternal){
   
     # Assign the raw object to the calling environment 
     #

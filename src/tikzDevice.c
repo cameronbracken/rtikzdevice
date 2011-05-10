@@ -79,7 +79,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
   const char *bg, *fg;
   double width, height;
   Rboolean standAlone, bareBones;
-  const char *documentDeclaration, *packages, *footer, *object;
+  const char *documentDeclaration, *packages, *footer, *object, *dateStamp;
   double baseSize;
   Rboolean console, sanitize, raw;
   /* 
@@ -153,7 +153,10 @@ SEXP TikZ_StartDevice ( SEXP args ){
   int engine = asInteger(CAR(args)); args = CDR(args);
   
   raw = asLogical(CAR(args)); args = CDR(args);
-  object = CHAR(asChar(CAR(args))); 
+  object = CHAR(asChar(CAR(args))); args = CDR(args);
+  
+	/* Use the datestamp from when tikz was called */
+  dateStamp = CHAR(asChar(CAR(args)));
   
 
   /* Ensure there is an empty slot avaliable for a new device. */
@@ -185,7 +188,7 @@ SEXP TikZ_StartDevice ( SEXP args ){
     */
     if( !TikZ_Setup( deviceInfo, fileName, width, height, bg, fg, baseSize,
         standAlone, bareBones, documentDeclaration, packages,
-        footer, console, sanitize, engine, raw, object ) ){
+        footer, console, sanitize, engine, raw, object, dateStamp ) ){
       /* 
        * If setup was unsuccessful, destroy the device and return
        * an error message.
@@ -230,7 +233,7 @@ static Rboolean TikZ_Setup(
   const char *documentDeclaration,
   const char *packages, const char *footer, 
   Rboolean console, Rboolean sanitize, int engine, 
-  Rboolean raw,  const char *object){
+  Rboolean raw,  const char *object, const char *dateStamp){
 
   /* 
    * Create tikzInfo, this variable contains information which is
@@ -292,7 +295,7 @@ static Rboolean TikZ_Setup(
   tikzInfo->raw = raw;
   tikzInfo->rawObj = object;
   /* datestamp will always be 20 characters*/
-  tikzInfo->dateStamp = (char*) calloc(20, sizeof(char));
+  tikzInfo->dateStamp = dateStamp;
   
 
   /* Incorporate tikzInfo into deviceInfo. */
@@ -1993,9 +1996,6 @@ static void Print_TikZ_Header( tikzDevDesc *tikzInfo ){
     currentDate = eval(lang1( install("getDateStampForTikz") ),
       namespace )
   );
-  
-  // Add the datestamp for the current file to tikzInfo
-  tikzInfo->dateStamp = (char *)CHAR(STRING_ELT(currentDate,0));
   
   SEXP currentVersion;
   PROTECT(
