@@ -534,7 +534,7 @@ static Rboolean TikZ_Open( pDevDesc deviceInfo ){
   if(tikzInfo->outFileName[0] == '\0'){
     //If empty file name output to console
     tikzInfo->console = TRUE; 
-  }else{
+  }else if(tikzInfo->raw == FALSE){
     if( !( tikzInfo->outputFile = fopen(R_ExpandFileName(tikzInfo->outFileName), "w") ) )
       return FALSE;
   }

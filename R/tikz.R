@@ -203,25 +203,27 @@ function (file = ifelse(onefile, "./Rplots.tex", paste("./Rplot",intToUtf8(37),"
   footer = getOption("tikzFooter")
 ){
 
-  tryCatch({
-    # Ok, this sucks. We copied the function signature of pdf() and got `file`
-    # as an argument to our function. We should have copied png() and used
-    # `filename`.
+  if(!raw){
+    tryCatch({
+      # Ok, this sucks. We copied the function signature of pdf() and got `file`
+      # as an argument to our function. We should have copied png() and used
+      # `filename`.
 
-    # file_path_as_absolute can give us the absolute path to the output
-    # file---but it has to exist first. So, we use file() to "touch" the
-    # path.
-    touch_file <- suppressWarnings(file(file, 'w')) 
-    close(touch_file)
+      # file_path_as_absolute can give us the absolute path to the output
+      # file---but it has to exist first. So, we use file() to "touch" the
+      # path.
+      touch_file <- suppressWarnings(file(file, 'w')) 
+      close(touch_file)
 
-    file <- tools::file_path_as_absolute(file)
-  },
-  error = function(e) {
-    stop(simpleError(paste(
-      "Cannot create:\n\t", file,
-      "\nBecause the directory does not exist or is not writable."
-    )))
-  })
+      file <- tools::file_path_as_absolute(file)
+    },
+    error = function(e) {
+      stop(simpleError(paste(
+        "Cannot create:\n\t", file,
+        "\nBecause the directory does not exist or is not writable."
+      )))
+    })
+  }
   
   # remove the file if we are outputting to multiple files since the file
   # name will get changed in the C code
@@ -265,7 +267,9 @@ function (file = ifelse(onefile, "./Rplots.tex", paste("./Rplot",intToUtf8(37),"
   
     # console option trumps raw output
   if(console) raw <- FALSE
-  if(raw && is.null(object)) object <- 'tikz.plot'
+  if(raw && is.null(object)) object <- 'tikz_plot_'
+  
+  dateStamp <- getDateStampForTikz()
 
   .External('TikZ_StartDevice', file, width, height, onefile, bg, fg, baseSize,
     standAlone, bareBones, documentDeclaration, packages, footer, console,
