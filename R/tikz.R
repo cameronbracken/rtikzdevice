@@ -192,7 +192,7 @@
 # unless properly escaped but roxygen wont properly escape it, so have to 
 # use this nasty workaround for now...  intToUtf8(37) == %
 tikz <-
-function (file = ifelse(onefile, "./Rplots.tex", paste("./Rplot",intToUtf8(37),"03d.tex",sep='')), 
+function (file = ifelse(onefile, "./Rplots.tex", "./Rplot%03d.tex"), 
   width = 7, height = 7, onefile = TRUE,
   bg="transparent", fg="black", pointsize = 10, standAlone = FALSE,
   bareBones = FALSE, console = FALSE, sanitize = FALSE,

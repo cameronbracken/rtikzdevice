@@ -66,7 +66,7 @@ deps:
 
 docs:
 	cd ..;\
-		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', use.Rd2=TRUE, overwrite=TRUE, unlink.target=TRUE)"
+		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', overwrite=TRUE, unlink.target=TRUE)"
 	# Cripple the new folder so you don't get confused and start doing
 	# development in there.
 	cd ../$(PKGSRC).build;\
