@@ -187,10 +187,6 @@
 #' }
 #'
 #' @export
-
-# this is lame, pretty sure this is a bug in roxygen. Rd cant handle % in 
-# unless properly escaped but roxygen wont properly escape it, so have to 
-# use this nasty workaround for now...  intToUtf8(37) == %
 tikz <-
 function (file = ifelse(onefile, "./Rplots.tex", "./Rplot%03d.tex"), 
   width = 7, height = 7, onefile = TRUE,

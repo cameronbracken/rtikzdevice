@@ -61,12 +61,12 @@ help:
 # Development Tasks
 #------------------------------------------------------------------------------
 deps:
-	"$(RBIN)/R" --vanilla --slave -e "install.packages(c('filehash','roxygen','testthat','ggplot2'))"
+	"$(RBIN)/R" --vanilla --slave -e "install.packages(c('filehash','roxygen2','testthat','ggplot2'))"
 
 
 docs:
 	cd ..;\
-		"$(RBIN)/R" --vanilla --slave -e "library(roxygen); roxygenize('$(PKGSRC)', '$(PKGSRC).build', overwrite=TRUE, unlink.target=TRUE)"
+		"$(RBIN)/R" --vanilla --slave -e "library(roxygen2); roxygenize('$(PKGSRC)', '$(PKGSRC).build', overwrite=TRUE, unlink.target=TRUE)"
 	# Cripple the new folder so you don't get confused and start doing
 	# development in there.
 	cd ../$(PKGSRC).build;\
