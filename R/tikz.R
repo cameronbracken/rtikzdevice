@@ -54,8 +54,9 @@
 #' @param fg The starting foreground color for the plot.
 #' @param pointsize Base pointsize used in the LaTeX document.  This option is
 #'   only used if a valid pointsize cannot be extracted from the value of
-#'   \code{getOption("tikzDocumentDeclaration")}.  See the section ``Font Size
-#'   Calculations'' in \link{tikzDevice-package} for more details.
+#'   \code{getOption("tikzDocumentDeclaration")}.  
+#'    See the section ``Font Size Calculations'' in \link{tikzDevice-package} 
+#'    for more details.
 #' @param standAlone A logical value indicating whether the output file should
 #'   be suitable for direct processing by LaTeX. A value of \code{FALSE}
 #'   indicates that the file is intended for inclusion in a larger document.
@@ -81,8 +82,8 @@
 #' @param engine a string specifying which TeX engine to use. Possible values
 #'   are 'pdftex' and 'xetex'. See the Unicode section of
 #'   \link{tikzDevice-package} for details.
-#' @param documentDeclaration See the sections ``Options That Affect Package
-#'   Behavior'' and ``Font Size Calculations'' of \link{tikzDevice-package}
+#' @param documentDeclaration See the sections ``Options That Affect Package Behavior'' 
+#'   and ``Font Size Calculations'' of \link{tikzDevice-package}
 #'   for more details.
 #' @param packages See the section ``Options That Affect Package Behavior'' of
 #'   \link{tikzDevice-package}.
@@ -116,7 +117,7 @@
 #' @keywords device
 #'
 #' @examples
-#'
+#''
 #' \dontrun{
 #'
 #' ## Example 1 ###################################

@@ -37,11 +37,11 @@
 #' @seealso \code{\link{tikz}}, \code{\link{getLatexCharMetrics}}
 #' @keywords character
 #'
-#' @examples
+#' @examples 
 #'
 #' 	getLatexStrWidth('{\\\\tiny Hello \\\\LaTeX!}')
 #'
-#' @export
+#' @export 
 getLatexStrWidth <-
 function(texString, cex = 1, face= 1, engine = getOption('tikzDefaultEngine')){
 
