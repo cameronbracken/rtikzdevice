@@ -117,7 +117,7 @@
 #' @keywords device
 #'
 #' @examples
-#''
+#'
 #' \dontrun{
 #'
 #' ## Example 1 ###################################
